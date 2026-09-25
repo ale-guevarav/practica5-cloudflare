@@ -17,7 +17,20 @@
 			"database_name": "p6",
 			"database_id": "c954f734-1580-43a4-a180-c4a22a4cc22f"
 		}
-	]
+	],
+
+	"env": {
+	"production": {
+		"name": "practica5-cloudflare-prod",
+		"d1_databases": [
+			{
+				"binding": "p6",
+				"database_name": "p6-prod",
+				"database_id": "3a6653e0-dfbb-4ef6-b2d9-8a8f63cec982"
+			}
+		]
+	}
+}
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
