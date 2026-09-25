@@ -1,33 +1,39 @@
-import {
-	env,
-	createExecutionContext,
-	waitOnExecutionContext,
-	SELF,
-} from "cloudflare:test";
+import { env } from "cloudflare:test";
+
 import { describe, it, expect } from "vitest";
 import worker from "../src/index";
 
-// For now, you'll need to do something like this to get a correctly-typed
-// `Request` to pass to `worker.fetch()`.
 const IncomingRequest = Request<unknown, IncomingRequestCfProperties>;
 
-describe("Hello World worker", () => {
-	it("responds with Practica 5 message (unit style)", async () => {
+describe("Cloudflare Worker with D1", () => {
+	it("reads users from the D1 database", async () => {
+		await env.p6
+			.prepare(
+				"CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER)"
+			)
+			.run();
+
+		await env.p6.prepare("DELETE FROM users").run();
+
+		await env.p6
+			.prepare("INSERT INTO users (name, age) VALUES (?, ?)")
+			.bind("Test User", 23)
+			.run();
+
 		const request = new IncomingRequest("http://example.com");
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, env, ctx);
-		await waitOnExecutionContext(ctx);
 
-		expect(await response.text()).toMatchInlineSnapshot(
-			`"Practica 5 - Cloudflare Worker funcionando"`
-		);
-	});
+		const response = await worker.fetch(request, env);
 
-	it("responds with Practica 5 message (integration style)", async () => {
-		const response = await SELF.fetch("https://example.com");
+		expect(response.status).toBe(200);
 
-		expect(await response.text()).toMatchInlineSnapshot(
-			`"Practica 5 - Cloudflare Worker funcionando"`
-		);
+		const data = await response.json();
+
+		expect(data).toEqual([
+			{
+				id: 1,
+				name: "Test User",
+				age: 23,
+			},
+		]);
 	});
 });
