@@ -3,7 +3,7 @@ name: Test and Deploy Worker
 on:
   push:
     branches:
-      - main
+      - NewProject
 
 jobs:
   test-and-coverage:
